@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contrat de Réservation — Easy Fly Booking</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --red:   #E8192C;
+    --blue:  #0057B8;
+    --sky:   #3AABF0;
+    --dark:  #0A1628;
+    --mid:   #1C3557;
+    --white: #ffffff;
+    --light: #f4f7ff;
+    --border:#dde4f0;
+    --text:  #1a2540;
+    --muted: #6b7a99;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--light);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--dark);
+    padding: 14px 5%;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; letter-spacing: 2px; color: var(--white);
+  }
+  .topbar-logo span { color: var(--red); }
+  .topbar-badge {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: rgba(255,255,255,0.45);
+  }
+
+  /* ── STEPS ── */
+  .steps-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 5%;
+    display: flex; gap: 0;
+  }
+  .step {
+    flex: 1; padding: 16px 0; text-align: center;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px;
+    color: var(--muted); border-bottom: 3px solid transparent;
+    transition: all 0.2s; cursor: default;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .step.active   { color: var(--blue); border-bottom-color: var(--blue); }
+  .step.done     { color: #22c55e;     border-bottom-color: #22c55e; }
+  .step-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--light); border: 2px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; flex-shrink: 0;
+  }
+  .step.done .step-num { background: #22c55e; border-color: #22c55e; color: white; }
+
+  /* ── MAIN ── */
+  .main { max-width: 780px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--white); border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    overflow: hidden; margin-bottom: 20px;
+  }
+  .panel-head {
+    background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 100%);
+    padding: 20px 28px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .panel-head-icon { font-size: 1.6rem; }
+  .panel-head h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem; letter-spacing: 2px; color: var(--white);
+  }
+  .panel-head p { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .panel-body { padding: 28px; }
+
+  /* ── FORM ── */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label {
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; color: var(--text);
+    background: var(--light); outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--blue); background: var(--white); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+
+  /* ── CONTRACT TEXT ── */
+  .contract-box {
+    background: #fafbff; border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 24px; max-height: 360px;
+    overflow-y: auto; font-size: 0.84rem; line-height: 1.75; color: #333;
+  }
+  .contract-box h3 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+    letter-spacing: 2px; color: var(--blue); margin: 16px 0 6px;
+  }
+  .contract-box h3:first-child { margin-top: 0; }
+  .contract-box p { margin-bottom: 8px; }
+  .contract-box strong { color: var(--text); }
+
+  .read-confirm {
+    display: flex; align-items: flex-start; gap: 12px;
+    margin-top: 16px; padding: 14px 16px;
+    background: rgba(0,87,184,0.05); border-radius: 8px;
+    border: 1px solid rgba(0,87,184,0.15);
+    cursor: default;
+  }
+  .read-confirm input[type="checkbox"] {
+    width: 18px; height: 18px; flex-shrink: 0; cursor: pointer;
+    accent-color: var(--blue); margin-top: 2px;
+  }
+  .read-confirm label {
+    font-size: 0.85rem; line-height: 1.5; color: var(--text); cursor: pointer;
+  }
+  .read-confirm label strong { color: var(--blue); }
+
+  /* ── SIGNATURE ── */
+  .sig-wrap {
+    border: 2px dashed var(--border); border-radius: 10px;
+    overflow: hidden; position: relative;
+    background: #fafbff; cursor: crosshair;
+  }
+  .sig-wrap canvas { display: block; width: 100%; touch-action: none; }
+  .sig-placeholder {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--muted); font-size: 0.85rem;
+    pointer-events: none; text-align: center; line-height: 1.6;
+  }
+  .sig-placeholder span { display: block; font-size: 2rem; margin-bottom: 6px; opacity: 0.4; }
+
+  .sig-actions {
+    display: flex; justify-content: flex-end; margin-top: 10px;
+  }
+  .btn-clear {
+    background: transparent; border: 1.5px solid var(--border);
+    border-radius: 6px; padding: 6px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── PREVIEW ── */
+  .preview-box {
+    background: var(--light); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 20px; display: none;
+  }
+  .preview-box.show { display: block; }
+  .preview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem; letter-spacing: 2px; color: var(--dark);
+  }
+  .preview-num {
+    font-size: 0.75rem; font-weight: 700; color: var(--muted);
+    background: var(--white); padding: 4px 10px; border-radius: 50px;
+    border: 1px solid var(--border);
+  }
+  .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .preview-item { display: flex; flex-direction: column; gap: 2px; }
+  .preview-item .pi-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .preview-item .pi-value {
+    font-size: 0.9rem; font-weight: 600; color: var(--dark);
+  }
+
+  /* ── BUTTONS ── */
+  .action-row {
+    display: flex; gap: 12px; justify-content: flex-end;
+    margin-top: 24px; flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--blue); color: var(--white);
+    border: none; border-radius: 8px; padding: 12px 28px;
+    font-family: 'DM Sans', sans-serif; font-weight: 700;
+    font-size: 0.92rem; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,87,184,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,87,184,0.4); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-whatsapp {
+    background: #25D366; color: var(--white);
+    border: none; border-radius: 8px; padding: 12px 28px;
+    font-family: 'DM Sans', sans-serif; font-weight: 700;
+    font-size: 0.92rem; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: none;
+  }
+  .btn-whatsapp:hover { transform: translateY(-2px); }
+  .btn-whatsapp.show { display: inline-flex; align-items: center; gap: 8px; }
+
+  .btn-pdf {
+    background: var(--red); color: var(--white);
+    border: none; border-radius: 8px; padding: 12px 28px;
+    font-family: 'DM Sans', sans-serif; font-weight: 700;
+    font-size: 0.92rem; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(232,25,44,0.3);
+    transition: transform 0.2s; display: none;
+  }
+  .btn-pdf:hover { transform: translateY(-2px); }
+  .btn-pdf.show { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* ── SUCCESS ── */
+  .success-screen {
+    display: none; text-align: center; padding: 60px 20px;
+  }
+  .success-screen.show { display: block; }
+  .success-icon { font-size: 4rem; margin-bottom: 16px; }
+  .success-screen h2 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+    letter-spacing: 3px; color: var(--dark); margin-bottom: 10px;
+  }
+  .success-screen p { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+
+  /* ── ALERT ── */
+  .alert {
+    display: none; padding: 12px 16px; border-radius: 8px;
+    font-size: 0.85rem; margin-top: 12px;
+  }
+  .alert.error { background: #fff0f0; border: 1px solid #fca5a5; color: #b91c1c; display: block; }
+
+  /* Page navigation */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .preview-grid { grid-template-columns: 1fr; }
+    .step span { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">EASY FLY <span>BOOKING</span></div>
+  <div class="topbar-badge">✈ Contrat de réservation</div>
+</div>
+
+<!-- STEPS -->
+<div class="steps-bar">
+  <div class="step active" id="step1">
+    <div class="step-num">1</div>
+    <span>Informations</span>
+  </div>
+  <div class="step" id="step2">
+    <div class="step-num">2</div>
+    <span>Contrat</span>
+  </div>
+  <div class="step" id="step3">
+    <div class="step-num">3</div>
+    <span>Signature</span>
+  </div>
+  <div class="step" id="step4">
+    <div class="step-num">4</div>
+    <span>Confirmation</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ══ PAGE 1 : INFOS ══ -->
+  <div class="page active" id="page1">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-icon">✈</div>
+        <div>
+          <h2>Informations de réservation</h2>
+          <p>Remplissez les détails de votre voyage</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nom complet *</label>
+            <input id="c-nom" type="text" placeholder="Ex : Jean-Pierre MOUSSAVOU">
+          </div>
+          <div class="form-group">
+            <label>Numéro de téléphone *</label>
+            <input id="c-tel" type="tel" placeholder="Ex : +241 77 00 00 00">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email (optionnel)</label>
+            <input id="c-email" type="email" placeholder="exemple@gmail.com">
+          </div>
+          <div class="form-group">
+            <label>Type de transport *</label>
+            <select id="c-transport">
+              <option value="" disabled selected>Choisir...</option>
+              <option value="Avion ✈">Avion ✈</option>
+              <option value="Train 🚂">Train 🚂</option>
+              <option value="Bateau 🚢">Bateau 🚢</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Point de départ *</label>
+            <select id="c-depart">
+              <option value="" disabled selected>Choisir une ville...</option>
+              <option value="Libreville">Libreville</option>
+              <option value="Port-Gentil">Port-Gentil</option>
+              <option value="Makokou">Makokou</option>
+              <option value="Franceville">Franceville</option>
+              <option value="Oyem">Oyem</option>
+              <option value="Gamba">Gamba</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Destination *</label>
+            <select id="c-destination">
+              <option value="" disabled selected>Choisir une ville...</option>
+              <option value="Libreville">Libreville</option>
+              <option value="Port-Gentil">Port-Gentil</option>
+              <option value="Makokou">Makokou</option>
+              <option value="Franceville">Franceville</option>
+              <option value="Oyem">Oyem</option>
+              <option value="Gamba">Gamba</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date de départ souhaitée *</label>
+            <input id="c-date" type="date">
+          </div>
+          <div class="form-group">
+            <label>Nombre de passagers *</label>
+            <select id="c-passagers">
+              <option value="" disabled selected>Choisir...</option>
+              <option value="1 passager">1 passager</option>
+              <option value="2 passagers">2 passagers</option>
+              <option value="3 passagers">3 passagers</option>
+              <option value="4 passagers">4 passagers</option>
+              <option value="5+ passagers">5+ passagers</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>Remarques / Demandes spéciales</label>
+            <textarea id="c-notes" placeholder="Ex : bagages supplémentaires, siège préférentiel..."></textarea>
+          </div>
+        </div>
+        <div id="alert1" class="alert"></div>
+        <div class="action-row">
+          <button class="btn-primary" onclick="goToStep2()">Suivant → Lire le contrat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2 : CONTRAT ══ -->
+  <div class="page" id="page2">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-icon">📄</div>
+        <div>
+          <h2>Conditions Générales de Réservation</h2>
+          <p>Lisez attentivement avant de signer</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="contract-box" id="contractText">
+
+          <p style="margin-bottom:14px; text-align:center;">Veuillez lire attentivement ce contrat de réservation de billets conclu avec <strong>EASY FLY BOOKING</strong>.</p>
+
+          <h3>1. OBJET DU CONTRAT</h3>
+          <p>Le présent contrat a pour objet la réservation de billets de train, d'avions ou de bateaux pour le Client par <strong>EASY FLY BOOKING</strong>.</p>
+
+          <h3>2. SERVICES FOURNIS</h3>
+          <p>EASY FLY BOOKING s'engage à :</p>
+          <p>• Réserver les billets de train, d'avion ou de bateau selon les préférences du Client.</p>
+          <p>• Informer le Client des options disponibles.</p>
+
+          <h3>3. RÉMUNÉRATION</h3>
+          <p>Le Client accepte de rembourser le montant des billets réservés, auquel s'ajoute une <strong>majoration de 18,5%</strong> pour le service.</p>
+          <p>Si le Client décide, pour une raison quelconque, d'annuler son départ alors que le billet a déjà été réservé, le Client s'engage à rembourser <strong>la totalité du montant exact du billet sans rajout des frais</strong>.</p>
+
+          <h3>4. ACCORD DU CLIENT</h3>
+          <p>Le Client donne son accord par téléphone pour chaque réservation effectuée. Toute réservation confirmée par le Client est considérée comme acceptée.</p>
+
+          <h3>5. RÉSILIATION</h3>
+          <p>Le Client peut résilier le présent contrat à tout moment en informant <strong>EASY FLY BOOKING</strong> par écrit.</p>
+
+        </div>
+
+        <div class="read-confirm">
+          <input type="checkbox" id="c-lu" onchange="checkRead()">
+          <label for="c-lu" style="cursor:pointer;">J'ai lu et j'accepte les <strong style="color:var(--blue);text-decoration:underline;cursor:pointer;">Conditions Générales de Réservation</strong> d'Easy Fly Booking dans leur intégralité.</label>
+        </div>
+
+        <div id="alert2" class="alert"></div>
+        <div class="action-row">
+          <button class="btn-primary" style="background:transparent;color:var(--muted);border:1.5px solid var(--border);box-shadow:none;" onclick="goTo(1)">← Retour</button>
+          <button class="btn-primary" id="btn-sign" onclick="goToStep3()" disabled>Passer à la signature →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 3 : SIGNATURE ══ -->
+  <div class="page" id="page3">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-icon">✍️</div>
+        <div>
+          <h2>Signature électronique</h2>
+          <p>Signez avec votre doigt (mobile) ou votre souris</p>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <!-- Preview recap -->
+        <div class="preview-box show" style="margin-bottom:20px;">
+          <div class="preview-header">
+            <div class="preview-title">RÉCAPITULATIF DE RÉSERVATION</div>
+            <div class="preview-num" id="prev-num">N° EFB-000000</div>
+          </div>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <div class="pi-label">Client</div>
+              <div class="pi-value" id="prev-nom">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Téléphone</div>
+              <div class="pi-value" id="prev-tel">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Transport</div>
+              <div class="pi-value" id="prev-transport">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Départ</div>
+              <div class="pi-value" id="prev-depart">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Destination</div>
+              <div class="pi-value" id="prev-destination">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Date souhaitée</div>
+              <div class="pi-value" id="prev-date">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Passagers</div>
+              <div class="pi-value" id="prev-passagers">—</div>
+            </div>
+            <div class="preview-item">
+              <div class="pi-label">Date du contrat</div>
+              <div class="pi-value" id="prev-today">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signature canvas -->
+        <div class="sig-wrap" id="sigWrap">
+          <canvas id="sigCanvas" height="180"></canvas>
+          <div class="sig-placeholder" id="sigPlaceholder">
+            <span>✍️</span>
+            Signez ici avec votre doigt ou votre souris
+          </div>
+        </div>
+        <div class="sig-actions">
+          <button class="btn-clear" onclick="clearSig()">Effacer la signature</button>
+        </div>
+
+        <div id="alert3" class="alert"></div>
+        <div class="action-row">
+          <button class="btn-primary" style="background:transparent;color:var(--muted);border:1.5px solid var(--border);box-shadow:none;" onclick="goTo(2)">← Retour</button>
+          <button class="btn-primary" onclick="validerContrat()">✅ Valider et générer le contrat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 4 : CONFIRMATION ══ -->
+  <div class="page" id="page4">
+    <div class="panel">
+      <div class="panel-body">
+        <div class="success-screen show">
+          <div class="success-icon">🎉</div>
+          <h2>CONTRAT SIGNÉ !</h2>
+          <p>Votre contrat de réservation a été généré avec succès.<br>
+          Téléchargez votre exemplaire PDF et envoyez-le nous sur WhatsApp.</p>
+
+          <div style="margin-top:32px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn-pdf show" id="btn-dl-pdf" onclick="telechargerPDF()">
+              📄 Télécharger mon contrat PDF
+            </button>
+          </div>
+
+          <p style="margin-top:24px; font-size:0.8rem; color:var(--muted);">
+            Numéro de contrat : <strong id="confirm-num" style="color:var(--blue);">—</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+var contractNum = '';
+var signatureData = '';
+var sigDrawing = false;
+
+// Pré-sélection du transport depuis l'URL (?transport=avion)
+window.addEventListener('DOMContentLoaded', function() {
+  var params = new URLSearchParams(window.location.search);
+  var t = params.get('transport');
+  if (t) {
+    var sel = document.getElementById('c-transport');
+    var map = { 'avion': 'Avion ✈', 'train': 'Train 🚂', 'bateau': 'Bateau 🚢' };
+    if (map[t.toLowerCase()]) {
+      sel.value = map[t.toLowerCase()];
+    }
+  }
+});
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goTo(n) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page' + n).classList.add('active');
+  document.querySelectorAll('.step').forEach(function(s, i){
+    s.classList.remove('active','done');
+    if (i + 1 < n)  s.classList.add('done');
+    if (i + 1 === n) s.classList.add('active');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goToStep2() {
+  var nom  = document.getElementById('c-nom').value.trim();
+  var tel  = document.getElementById('c-tel').value.trim();
+  var tsp  = document.getElementById('c-transport').value;
+  var dep  = document.getElementById('c-depart').value.trim();
+  var dest = document.getElementById('c-destination').value.trim();
+  var date = document.getElementById('c-date').value;
+  var pax  = document.getElementById('c-passagers').value;
+  var al   = document.getElementById('alert1');
+
+  if (!nom || !tel || !tsp || !dep || !dest || !date || !pax) {
+    al.textContent = '⚠️ Veuillez remplir tous les champs obligatoires (*)';
+    al.className = 'alert error'; return;
+  }
+  al.className = 'alert';
+  goTo(2);
+}
+
+function goToStep3() {
+  var al = document.getElementById('alert2');
+  if (!document.getElementById('c-lu').checked) {
+    al.textContent = '⚠️ Vous devez accepter les conditions générales pour continuer.';
+    al.className = 'alert error'; return;
+  }
+  al.className = 'alert';
+
+  // Fill preview
+  contractNum = 'EFB-' + Date.now().toString().slice(-6);
+  document.getElementById('prev-num').textContent        = 'N° ' + contractNum;
+  document.getElementById('prev-nom').textContent        = document.getElementById('c-nom').value;
+  document.getElementById('prev-tel').textContent        = document.getElementById('c-tel').value;
+  document.getElementById('prev-transport').textContent  = document.getElementById('c-transport').value;
+  document.getElementById('prev-depart').textContent     = document.getElementById('c-depart').value;
+  document.getElementById('prev-destination').textContent= document.getElementById('c-destination').value;
+  document.getElementById('prev-date').textContent       = formatDate(document.getElementById('c-date').value);
+  document.getElementById('prev-passagers').textContent  = document.getElementById('c-passagers').value;
+  document.getElementById('prev-today').textContent      = formatDate(new Date().toISOString().split('T')[0]);
+
+  goTo(3);
+  setTimeout(initCanvas, 100);
+}
+
+function toggleCheck() {
+  var cb = document.getElementById('c-lu');
+  cb.checked = !cb.checked;
+  checkRead();
+}
+function checkRead() {
+  document.getElementById('btn-sign').disabled = !document.getElementById('c-lu').checked;
+}
+
+// ══════════════════════════════════════════
+// CANVAS SIGNATURE
+// ══════════════════════════════════════════
+function initCanvas() {
+  var canvas = document.getElementById('sigCanvas');
+  var wrap   = document.getElementById('sigWrap');
+  canvas.width  = wrap.offsetWidth;
+  canvas.height = 180;
+  var ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#0057B8';
+  ctx.lineWidth   = 2.5;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  canvas.addEventListener('mousedown',  function(e){ sigDrawing=true; ctx.beginPath(); var p=getPos(e); ctx.moveTo(p.x,p.y); hidePlaceholder(); });
+  canvas.addEventListener('mousemove',  function(e){ if(!sigDrawing) return; var p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); });
+  canvas.addEventListener('mouseup',    function(){ sigDrawing=false; });
+  canvas.addEventListener('mouseleave', function(){ sigDrawing=false; });
+  canvas.addEventListener('touchstart', function(e){ e.preventDefault(); sigDrawing=true; ctx.beginPath(); var p=getPos(e); ctx.moveTo(p.x,p.y); hidePlaceholder(); }, {passive:false});
+  canvas.addEventListener('touchmove',  function(e){ e.preventDefault(); if(!sigDrawing) return; var p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); }, {passive:false});
+  canvas.addEventListener('touchend',   function(){ sigDrawing=false; });
+}
+
+function hidePlaceholder() {
+  document.getElementById('sigPlaceholder').style.display = 'none';
+}
+
+function clearSig() {
+  var canvas = document.getElementById('sigCanvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('sigPlaceholder').style.display = 'flex';
+  signatureData = '';
+}
+
+function isSigEmpty() {
+  var canvas = document.getElementById('sigCanvas');
+  var data   = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+  for (var i = 3; i < data.length; i += 4) { if (data[i] > 0) return false; }
+  return true;
+}
+
+// ══════════════════════════════════════════
+// VALIDATION FINALE
+// ══════════════════════════════════════════
+function validerContrat() {
+  var al = document.getElementById('alert3');
+  if (isSigEmpty()) {
+    al.textContent = '⚠️ Veuillez apposer votre signature avant de valider.';
+    al.className = 'alert error'; return;
+  }
+  al.className = 'alert';
+  signatureData = document.getElementById('sigCanvas').toDataURL('image/png');
+  document.getElementById('confirm-num').textContent = contractNum;
+  envoyerEmail();
+  goTo(4);
+}
+
+// ══════════════════════════════════════════
+// EMAIL VIA EMAILJS
+// ══════════════════════════════════════════
+function envoyerEmail() {
+  emailjs.init('IAD_jqwLE5Sz3kXcy'); // ← À remplacer après création compte EmailJS
+
+  var params = {
+    to_email:    'alphasantorigame@gmail.com',
+    contrat_num: contractNum,
+    client_nom:  document.getElementById('c-nom').value,
+    client_tel:  document.getElementById('c-tel').value,
+    client_email:document.getElementById('c-email').value || 'Non renseigné',
+    transport:   document.getElementById('c-transport').value,
+    depart:      document.getElementById('c-depart').value,
+    destination: document.getElementById('c-destination').value,
+    date_voyage: formatDate(document.getElementById('c-date').value),
+    passagers:   document.getElementById('c-passagers').value,
+    notes:       document.getElementById('c-notes').value || 'Aucune',
+    date_contrat:formatDate(new Date().toISOString().split('T')[0]),
+    signature:   signatureData
+  };
+
+  emailjs.send('service_obp40rw', 'template_a6juzbm', params)
+    .then(function() {
+      console.log('Email envoyé avec succès');
+    }, function(err) {
+      console.warn('Email non envoyé :', JSON.stringify(err));
+    });
+}
+
+// ══════════════════════════════════════════
+// PDF GENERATION
+// ══════════════════════════════════════════
+function telechargerPDF() {
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  var pw = 210, ph = 297;
+  var ml = 20, mr = 20, mt = 20;
+  var cw = pw - ml - mr;
+  var y = mt;
+
+  // Header band
+  doc.setFillColor(10, 22, 40);
+  doc.rect(0, 0, pw, 38, 'F');
+  doc.setFillColor(232, 25, 44);
+  doc.rect(0, 38, pw, 5, 'F');
+
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
+  doc.text('EASY FLY BOOKING', ml, 18);
+  doc.setFontSize(9);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(180,200,220);
+  doc.text('CONTRAT DE RESERVATION DE BILLET DE TRANSPORT', ml, 26);
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(8);
+  doc.text('N° ' + contractNum, pw - mr, 26, { align:'right' });
+  doc.text('Date : ' + formatDate(new Date().toISOString().split('T')[0]), pw - mr, 33, { align:'right' });
+
+  y = 52;
+
+  // Info box
+  doc.setFillColor(244, 247, 255);
+  doc.roundedRect(ml, y, cw, 48, 3, 3, 'F');
+  doc.setDrawColor(221, 228, 240);
+  doc.roundedRect(ml, y, cw, 48, 3, 3, 'S');
+
+  var col1 = ml + 6, col2 = ml + cw/2 + 4;
+  var iy = y + 10;
+  var fields = [
+    ['Client',       document.getElementById('c-nom').value,          'Transport',   document.getElementById('c-transport').value],
+    ['Telephone',    document.getElementById('c-tel').value,           'Passagers',   document.getElementById('c-passagers').value],
+    ['Depart',       document.getElementById('c-depart').value,        'Destination', document.getElementById('c-destination').value],
+    ['Date voyage',  formatDate(document.getElementById('c-date').value), 'Email',    document.getElementById('c-email').value || '—'],
+  ];
+
+  fields.forEach(function(row) {
+    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(107,122,153);
+    doc.text(row[0].toUpperCase(), col1, iy);
+    doc.text(row[2].toUpperCase(), col2, iy);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(26,37,64);
+    doc.text(row[1] || '—', col1, iy + 5);
+    doc.text(row[3] || '—', col2, iy + 5);
+    iy += 12;
+  });
+
+  y += 54;
+
+  // Notes
+  var notes = document.getElementById('c-notes').value.trim();
+  if (notes) {
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(107,122,153);
+    doc.text('REMARQUES', ml, y);
+    y += 5;
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(26,37,64);
+    var lines = doc.splitTextToSize(notes, cw);
+    doc.text(lines, ml, y);
+    y += lines.length * 4 + 6;
+  }
+
+  // Divider
+  doc.setDrawColor(221,228,240); doc.setLineWidth(0.5);
+  doc.line(ml, y, pw - mr, y); y += 8;
+
+  // Contract articles
+  doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(0,87,184);
+  doc.text('CONDITIONS GENERALES DE RESERVATION', ml, y); y += 7;
+
+  var articles = [
+    ['1. OBJET DU CONTRAT', 'Le present contrat a pour objet la reservation de billets de train, d\'avions ou de bateaux pour le Client par EASY FLY BOOKING.'],
+    ['2. SERVICES FOURNIS', 'EASY FLY BOOKING s\'engage a : Reserver les billets de train, d\'avion ou de bateau selon les preferences du Client. Informer le Client des options disponibles. Gerer les remboursements de maniere simple et efficace.'],
+    ['3. REMUNERATION', 'Le Client accepte de rembourser le montant des billets reserves, auquel s\'ajoute une majoration de 18,5% pour le service. Si le Client annule son depart alors que le billet a deja ete reserve, il s\'engage a rembourser la totalite du montant exact du billet sans rajout des frais.'],
+    ['4. ACCORD DU CLIENT', 'Le Client donne son accord par telephone pour chaque reservation effectuee. Toute reservation confirmee par le Client est consideree comme acceptee.'],
+    ['5. RESILIATION', 'Le Client peut resilier le present contrat a tout moment en informant EASY FLY BOOKING par ecrit.'],
+  ];
+
+  articles.forEach(function(a) {
+    if (y > ph - 60) { doc.addPage(); y = 20; }
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(26,37,64);
+    doc.text(a[0], ml, y); y += 4;
+    doc.setFont('helvetica','normal'); doc.setTextColor(80,90,110);
+    var lines = doc.splitTextToSize(a[1], cw);
+    doc.text(lines, ml, y);
+    y += lines.length * 4 + 4;
+  });
+
+  y += 4;
+  if (y > ph - 55) { doc.addPage(); y = 20; }
+
+  // Signature section
+  doc.setDrawColor(221,228,240); doc.line(ml, y, pw-mr, y); y += 8;
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(107,122,153);
+  doc.text('SIGNATURE DU CLIENT', ml, y); y += 4;
+  doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(150,160,180);
+  doc.text('En signant, le client atteste avoir lu et accepte les conditions generales.', ml, y); y += 6;
+
+  // Signature image
+  if (signatureData) {
+    doc.setFillColor(244,247,255);
+    doc.roundedRect(ml, y, 80, 30, 2, 2, 'F');
+    doc.setDrawColor(221,228,240);
+    doc.roundedRect(ml, y, 80, 30, 2, 2, 'S');
+    doc.addImage(signatureData, 'PNG', ml+2, y+1, 76, 28);
+    y += 32;
+  }
+
+  doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(107,122,153);
+  doc.text('Signe electroniquement le ' + formatDate(new Date().toISOString().split('T')[0]), ml, y);
+  doc.text('Par : ' + document.getElementById('c-nom').value, ml, y+4);
+
+  // Footer
+  doc.setFillColor(10,22,40);
+  doc.rect(0, ph-14, pw, 14, 'F');
+  doc.setTextColor(120,140,170); doc.setFontSize(7);
+  doc.text('Easy Fly Booking  |  Tel: +241 77 06 57 83  |  eflybooking@gmail.com', pw/2, ph-7, { align:'center' });
+
+  // Mobile-compatible download
+  var pdfBlob = doc.output('blob');
+  var blobUrl = URL.createObjectURL(pdfBlob);
+  var dlLink = document.createElement('a');
+  dlLink.href = blobUrl;
+  dlLink.download = 'Contrat-EasyFlyBooking-' + contractNum + '.pdf';
+  dlLink.style.display = 'none';
+  document.body.appendChild(dlLink);
+  dlLink.click();
+  setTimeout(function(){ document.body.removeChild(dlLink); URL.revokeObjectURL(blobUrl); }, 2000);
+}
+
+// ══════════════════════════════════════════
+// WHATSAPP
+// ══════════════════════════════════════════
+function envoyerWhatsApp() {
+  var msg = "Bonjour Easy Fly Booking ✈️\n\n"
+    + "📄 *Contrat signé — " + contractNum + "*\n\n"
+    + "👤 *Client :* "      + document.getElementById('c-nom').value + "\n"
+    + "📞 *Tél :* "         + document.getElementById('c-tel').value + "\n"
+    + "🚀 *Transport :* "   + document.getElementById('c-transport').value + "\n"
+    + "📍 *Départ :* "      + document.getElementById('c-depart').value + "\n"
+    + "🌍 *Destination :* " + document.getElementById('c-destination').value + "\n"
+    + "📅 *Date voyage :* " + formatDate(document.getElementById('c-date').value) + "\n"
+    + "👥 *Passagers :* "   + document.getElementById('c-passagers').value + "\n\n"
+    + "✅ J'ai lu et accepté les conditions générales.\n"
+    + "📎 Le contrat signé (PDF) est joint à ce message.";
+
+  // Envoyer au premier numéro
+  var waLink = document.getElementById('wa-direct-link');
+  waLink.href = "https://wa.me/241065033140?text=" + encodeURIComponent(msg);
+  waLink.click();
+
+  // Envoyer au deuxième numéro après 2 secondes
+  setTimeout(function() {
+    window.open("https://wa.me/241076555300?text=" + encodeURIComponent(msg), '_blank');
+  }, 2000);
+
+  // Envoyer au troisième numéro après 4 secondes
+  setTimeout(function() {
+    window.open("https://wa.me/24177065783?text=" + encodeURIComponent(msg), '_blank');
+  }, 4000);
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function formatDate(d) {
+  if (!d) return '—';
+  var p = d.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+</script>
+</body>
+</html>
