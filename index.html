@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy Fly Booking — Voyagez Sans Stress</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:#E8192C; --blue:#0066FF; --blue-dark:#0A1628;
+    --sky:#3AABF0; --white:#fff; --ink:#0A1628;
+    --gray:#6B7A99; --light:#F4F6FA; --border:#E8EDF4;
+  }
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Sora',sans-serif; background:var(--white); color:var(--ink); -webkit-font-smoothing:antialiased; }
+
+  /* TOP NAV */
+  .topbar {
+    position:relative;
+    background:var(--blue-dark); color:#fff;
+    padding:1.5rem 5% 2rem;
+    overflow:hidden;
+  }
+  .topbar::before {
+    content:''; position:absolute; inset:0; z-index:0;
+    background:
+      linear-gradient(180deg, rgba(10,22,40,0.45) 0%, rgba(10,22,40,0.62) 100%),
+      url('avion-ba.jpg') center/cover no-repeat;
+  }
+  .topbar > * { position:relative; z-index:2; }
+  .topbar-logo {
+    font-size:1.4rem; font-weight:800; letter-spacing:-0.5px;
+    margin-bottom:1.8rem;
+  }
+  .topbar-logo span { color:var(--red); }
+
+  /* ── HERO INLINE (dans le topbar) ── */
+  .hero-inline {
+    margin:1.8rem 0 2rem;
+  }
+  .hero-inline-badge {
+    display:inline-flex; align-items:center; gap:9px;
+    background:linear-gradient(120deg, rgba(58,171,240,0.18), rgba(0,102,255,0.10));
+    backdrop-filter:blur(14px);
+    border:1px solid rgba(58,171,240,0.35);
+    padding:9px 8px 9px 9px; border-radius:50px;
+    font-family:'Sora',sans-serif;
+    font-size:0.66rem; font-weight:600;
+    letter-spacing:2.5px; text-transform:uppercase;
+    color:rgba(255,255,255,0.92); margin-bottom:1.4rem; width:fit-content;
+    box-shadow:0 4px 24px rgba(58,171,240,0.15), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .hero-inline-badge .badge-pin {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:50%;
+    background:linear-gradient(135deg, var(--sky), var(--blue));
+    flex-shrink:0;
+  }
+  .hero-inline-badge .badge-pin svg {
+    width:12px; height:12px; stroke:#fff; stroke-width:2.2; fill:none;
+  }
+  .hero-inline-badge .badge-flag { font-size:0.85rem; margin-left:2px; }
+  .hero-inline-badge .badge-divider {
+    width:1px; height:12px; background:rgba(255,255,255,0.25);
+    margin:0 2px;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(0.8);} }
+  .hero-inline h1 {
+    font-family:'Playfair Display',serif;
+    font-size:clamp(2.4rem,7vw,3.8rem);
+    font-weight:900; line-height:1.1; color:#fff;
+    margin-bottom:1rem;
+  }
+  .hero-inline h1 em { font-style:italic; color:var(--sky); }
+  .hero-inline p {
+    font-family:'Sora',sans-serif;
+    font-size:0.95rem; line-height:1.6;
+    color:rgba(255,255,255,0.65); max-width:440px;
+  }
+
+  /* ROUND ICON NAV */
+  .icon-nav {
+    display:flex; justify-content:space-around; gap:1rem;
+    max-width:480px;
+  }
+  .icon-item {
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    cursor:pointer; text-decoration:none;
+    flex:1;
+  }
+  .icon-circle {
+    width:64px; height:64px; border-radius:50%;
+    background:var(--blue);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform 0.25s, background 0.25s;
+    position:relative;
+  }
+  .icon-item:hover .icon-circle { transform:translateY(-4px); background:var(--sky); }
+  .icon-circle svg { width:28px; height:28px; stroke:#fff; stroke-width:2; fill:none; }
+  .icon-label { font-size:0.85rem; font-weight:600; color:#fff; }
+  .icon-soon {
+    position:absolute; top:-4px; right:-8px;
+    background:var(--red); color:#fff;
+    font-size:0.52rem; font-weight:700; padding:2px 6px;
+    border-radius:50px; letter-spacing:0.3px;
+  }
+
+  /* SCROLLING BAND */
+  .dest-band {
+    background:var(--red); padding:12px 0; overflow:hidden;
+  }
+  .dest-band-track {
+    display:flex; gap:2.5rem; white-space:nowrap;
+    animation:bandScroll 20s linear infinite;
+  }
+  .dest-band-item {
+    font-family:'Sora',sans-serif; font-size:0.85rem; font-weight:600;
+    letter-spacing:2px; color:#fff; flex-shrink:0;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  @keyframes bandScroll { from{transform:translateX(0);} to{transform:translateX(-50%);} }
+
+  /* HORIZONTAL SCROLL CARDS */
+  .scroll-cards {
+    display:flex; gap:0.9rem; overflow-x:auto;
+    padding:1.5rem 5%; margin-top:-1rem;
+    scrollbar-width:none;
+  }
+  .scroll-cards::-webkit-scrollbar { display:none; }
+  .mini-card {
+    flex-shrink:0; width:170px;
+    background:var(--blue-dark); color:#fff;
+    border-radius:18px; padding:1.2rem;
+    display:flex; flex-direction:column; gap:0.8rem;
+    text-decoration:none;
+    transition:transform 0.2s;
+  }
+  .mini-card:hover { transform:translateY(-3px); }
+  .mini-card.mini-contact {
+    background:
+      linear-gradient(160deg, rgba(37,211,102,0.78), rgba(20,100,60,0.85)),
+      url('contact.jpg') center/cover no-repeat;
+  }
+  .mini-card.mini-services {
+    background:
+      linear-gradient(160deg, rgba(10,22,40,0.55), rgba(10,22,40,0.80)),
+      url('lounge.webp') center/cover no-repeat;
+  }
+  .mini-card-icon {
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(58,171,240,0.2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+  }
+  .mini-card h4 { font-size:0.95rem; font-weight:700; line-height:1.3; }
+
+  /* ACTION BLOCKS */
+  .action-blocks {
+    display:flex; flex-direction:column; gap:12px;
+    padding:1.5rem 5% 0.5rem;
+  }
+  .action-block {
+    display:flex; align-items:center; gap:14px;
+    border-radius:18px; padding:1.1rem 1.2rem;
+    text-decoration:none;
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .action-block:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.14); }
+  .action-contact { background:#25D366; color:#fff; }
+  .action-services {
+    background:
+      linear-gradient(135deg, rgba(10,22,40,0.82), rgba(28,53,87,0.72)),
+      url('lounge.webp') center/cover no-repeat;
+    color:#fff;
+  }
+  .action-icon {
+    width:48px; height:48px; border-radius:14px; flex-shrink:0;
+    background:rgba(255,255,255,0.18);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .action-icon svg { width:24px; height:24px; stroke:#fff; stroke-width:2; fill:none; }
+  .action-text { flex:1; display:flex; flex-direction:column; gap:2px; }
+  .action-text b { font-size:1.05rem; font-weight:700; }
+  .action-text span { font-size:0.78rem; opacity:0.85; }
+  .action-arrow { font-size:1.3rem; opacity:0.8; }
+
+  /* BIG BLOCKS */
+  .blocks { padding:1rem 5% 2rem; display:flex; flex-direction:column; gap:1.5rem; }
+
+  .big-block {
+    border-radius:28px; overflow:hidden;
+    position:relative; min-height:380px;
+    display:flex; flex-direction:column;
+    padding:2.5rem;
+    cursor:pointer;
+    transition:transform 0.3s;
+  }
+  .big-block:hover { transform:scale(0.99); }
+
+  .block-flights {
+    background:
+      linear-gradient(160deg, rgba(0,102,255,0.78) 0%, rgba(0,82,200,0.70) 100%),
+      url('ciel.jpg') center/cover no-repeat;
+    color:#fff;
+  }
+  .block-title {
+    font-size:2.2rem; font-weight:800;
+    line-height:1.1; letter-spacing:-1px;
+    margin-bottom:0.8rem;
+  }
+  .block-sub {
+    font-size:0.95rem; font-weight:500;
+    opacity:0.9; line-height:1.5; max-width:340px;
+  }
+
+  /* photo collage for flights */
+  .collage {
+    display:grid;
+    grid-template-columns:1fr 1.3fr;
+    gap:10px; margin-top:auto; padding-top:1.5rem;
+    position:relative;
+  }
+  .collage img { width:100%; border-radius:14px; object-fit:cover; }
+  .collage .c1 { grid-row:span 2; height:100%; min-height:160px; }
+  .collage .c2 { height:90px; }
+  .collage .c3 { height:90px; }
+  .collage-icons {
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    display:flex; gap:10px; z-index:5;
+  }
+  .collage-badge {
+    width:48px; height:48px; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 16px rgba(0,0,0,0.2); font-size:1.2rem;
+  }
+  .collage-badge.active { background:var(--sky); }
+
+  .block-photo {
+    color:#fff; justify-content:flex-start;
+  }
+  .block-photo::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(10,22,40,0.55) 0%, rgba(10,22,40,0.15) 60%);
+    z-index:1;
+  }
+  .block-photo > * { position:relative; z-index:2; }
+  .block-bg {
+    position:absolute; inset:0; z-index:0;
+    background-size:cover; background-position:center;
+  }
+  .block-badge-soon {
+    display:inline-block; background:var(--red); color:#fff;
+    font-size:0.7rem; font-weight:700; padding:5px 14px;
+    border-radius:50px; margin-bottom:1rem; width:fit-content;
+    letter-spacing:0.5px;
+  }
+
+  /* CTA BUTTON */
+  .block-cta {
+    margin-top:1.5rem;
+    background:#fff; color:var(--blue);
+    border:none; cursor:pointer;
+    padding:14px 28px; border-radius:50px;
+    font-family:'Sora',sans-serif; font-weight:700; font-size:0.9rem;
+    width:fit-content; text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:transform 0.2s;
+  }
+  .block-cta:hover { transform:translateX(4px); }
+  .block-photo .block-cta { background:#fff; color:var(--ink); }
+
+  /* STATS STRIP */
+  .stats-strip {
+    background:var(--light);
+    display:flex; justify-content:space-around;
+    padding:2rem 5%; flex-wrap:wrap; gap:1.5rem;
+    text-align:center;
+  }
+  .stat b { display:block; font-size:1.8rem; font-weight:800; color:var(--blue); }
+  .stat span { font-size:0.8rem; color:var(--gray); font-weight:500; }
+
+  /* BOTTOM TAB BAR */
+  .tabbar {
+    position:sticky; bottom:0; z-index:50;
+    background:#fff; border-top:1px solid var(--border);
+    display:flex; justify-content:space-around;
+    padding:0.8rem 0 1.2rem;
+  }
+  .tab {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    text-decoration:none; color:var(--gray);
+    font-size:0.7rem; font-weight:600;
+    cursor:pointer;
+  }
+  .tab svg { width:22px; height:22px; stroke:currentColor; stroke-width:2; fill:none; }
+  .tab.active { color:var(--ink); }
+
+  /* TRANSPORT CHOICES */
+  .transport-choices { display:flex; flex-direction:column; gap:10px; }
+  .transport-choice {
+    display:flex; align-items:center; gap:14px;
+    background:var(--light); border:1.5px solid var(--border);
+    border-radius:14px; padding:12px 14px;
+    text-decoration:none; color:var(--ink);
+    transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .transport-choice:hover {
+    border-color:var(--blue); transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+  }
+  .tc-icon {
+    width:46px; height:46px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tc-icon svg { width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; }
+  .tc-text { flex:1; text-align:left; display:flex; flex-direction:column; }
+  .tc-text b { font-size:1rem; font-weight:700; }
+  .tc-text span { font-size:0.75rem; color:var(--gray); }
+  .tc-arrow { color:var(--gray); font-size:1.1rem; }
+
+  /* MODAL */
+  .modal {
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(10,22,40,0.85); backdrop-filter:blur(6px);
+    align-items:center; justify-content:center; padding:1.5rem;
+  }
+  .modal-box {
+    background:#fff; border-radius:24px; max-width:380px; width:100%;
+    padding:2.5rem 2rem; text-align:center;
+    box-shadow:0 30px 80px rgba(0,0,0,0.4);
+  }
+  .modal-icon {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--sky));
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 1.2rem; font-size:1.8rem;
+  }
+  .modal-box h3 { font-size:1.3rem; font-weight:800; margin-bottom:0.8rem; }
+  .modal-box p { color:var(--gray); font-size:0.9rem; line-height:1.6; margin-bottom:1.5rem; }
+  .modal-wa {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    background:#25D366; color:#fff; text-decoration:none;
+    padding:13px; border-radius:12px; font-weight:700; font-size:0.9rem; margin-bottom:10px;
+  }
+  .modal-close {
+    width:100%; background:var(--light); color:var(--gray); border:none;
+    border-radius:12px; padding:13px; font-family:'Sora',sans-serif;
+    font-weight:600; font-size:0.9rem; cursor:pointer;
+  }
+
+  @media (min-width:768px) {
+    .icon-nav { margin:0 auto; }
+    .stats-strip { justify-content:center; gap:5rem; }
+    .big-block { min-height:420px; }
+    .block-title { font-size:2.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR with round icons -->
+<div class="topbar">
+  <div class="topbar-logo">Easy Fly <span>Booking</span></div>
+
+  <div class="hero-inline">
+    <div class="hero-inline-badge">
+      <span class="badge-pin"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+      Agence de billetterie
+      <span class="badge-divider"></span>
+      Gabon <span class="badge-flag">🇬🇦</span>
+    </div>
+    <h1>Voyagez <em>sans stress</em> au Gabon</h1>
+    <p>Billets d'avion, de train et de bateau — nous gérons tout pour que vous vous concentriez sur ce qui compte vraiment.</p>
+  </div>
+
+  <div class="icon-nav">
+    <a class="icon-item" onclick="openTransport()">
+      <div class="icon-circle">
+        <svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+      </div>
+      <span class="icon-label">Transport</span>
+    </a>
+    <a class="icon-item" onclick="openModal('Séjours')">
+      <div class="icon-circle">
+        <span class="icon-soon">Bientôt</span>
+        <svg viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>
+      </div>
+      <span class="icon-label">Séjours</span>
+    </a>
+    <a class="icon-item" onclick="openModal('Location de voitures')">
+      <div class="icon-circle">
+        <span class="icon-soon">Bientôt</span>
+        <svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+      </div>
+      <span class="icon-label">Voitures</span>
+    </a>
+  </div>
+</div>
+
+<!-- DESTINATIONS BAND -->
+<div class="dest-band">
+  <div class="dest-band-track">
+    <span class="dest-band-item">✈ Libreville</span>
+    <span class="dest-band-item">✈ Port-Gentil</span>
+    <span class="dest-band-item">✈ Franceville</span>
+    <span class="dest-band-item">✈ Gamba</span>
+    <span class="dest-band-item">✈ Makokou</span>
+    <span class="dest-band-item">✈ Oyem</span>
+    <span class="dest-band-item">✈ Libreville</span>
+    <span class="dest-band-item">✈ Port-Gentil</span>
+    <span class="dest-band-item">✈ Franceville</span>
+    <span class="dest-band-item">✈ Gamba</span>
+    <span class="dest-band-item">✈ Makokou</span>
+    <span class="dest-band-item">✈ Oyem</span>
+  </div>
+</div>
+
+<!-- SCROLL CARDS -->
+<div class="scroll-cards">
+  <a href="https://wa.me/241065033140?text=Bonjour%2C%20je%20souhaite%20avoir%20des%20informations%20sur%20vos%20prestations%20de%20services%20de%20r%C3%A9servation%20de%20billets%20d%27avion%2C%20de%20bateau%20et%20de%20train." target="_blank" class="mini-card mini-contact">
+    <div class="mini-card-icon" style="background:rgba(37,211,102,0.25);">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff;stroke-width:2;fill:none;"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    </div>
+    <h4>Contactez-nous</h4>
+  </a>
+  <a href="services.html" class="mini-card mini-services">
+    <div class="mini-card-icon">
+      <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#fff;stroke-width:2;fill:none;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <h4>Nos services</h4>
+  </a>
+</div>
+
+<!-- BIG BLOCKS -->
+<div class="blocks" id="services">
+
+  <!-- TRANSPORT BLOCK -->
+  <div class="big-block block-flights" onclick="window.location.href='contrat-reservation.html'">
+    <div class="block-title">Voyagez<br>sans stress</div>
+    <div class="block-sub">Billets d'avion, de train et de bateau partout au Gabon — nous gérons tout pour vous.</div>
+    <div class="collage">
+      <img class="c1" src="avion.webp" alt="Avion">
+      <img class="c2" src="train.webp" alt="Train">
+      <img class="c3" src="bateau.jpg" alt="Bateau">
+    </div>
+    <a href="contrat-reservation.html" class="block-cta" onclick="event.stopPropagation()">Réserver maintenant →</a>
+  </div>
+
+  <!-- SEJOURS BLOCK -->
+  <div class="big-block block-photo" onclick="openModal('Séjours')">
+    <div class="block-bg" style="background-image:linear-gradient(160deg,rgba(0,102,255,0.55),rgba(10,22,40,0.55)),url('sejour.jpg');background-size:cover;background-position:center;"></div>
+    <div class="block-badge-soon">🚀 Bientôt disponible</div>
+    <div class="block-title">Des séjours<br>mémorables</div>
+    <div class="block-sub">Hôtels, résidences et appartements — trouvez le logement parfait pour votre voyage.</div>
+    <a class="block-cta" onclick="event.stopPropagation(); openModal('Séjours')">Être informé →</a>
+  </div>
+
+  <!-- VOITURES BLOCK -->
+  <div class="big-block block-photo" onclick="openModal('Location de voitures')">
+    <div class="block-bg" style="background-image:linear-gradient(160deg,rgba(28,53,87,0.55),rgba(10,22,40,0.60)),url('voiture.jpg');background-size:cover;background-position:center;"></div>
+    <div class="block-badge-soon">🚀 Bientôt disponible</div>
+    <div class="block-title">Location<br>de voiture</div>
+    <div class="block-sub">Déplacez-vous librement à votre arrivée. Des citadines aux SUV, à moindre coût.</div>
+    <a class="block-cta" onclick="event.stopPropagation(); openModal('Location de voitures')">Être informé →</a>
+  </div>
+
+</div>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat"><b>🇬🇦</b><span>Couverture nationale</span></div>
+  <div class="stat"><b>3</b><span>Types de transport</span></div>
+  <div class="stat"><b>24/7</b><span>Support client</span></div>
+</div>
+
+<!-- MODALE CHOIX TRANSPORT -->
+<div class="modal" id="transport-modal">
+  <div class="modal-box" style="max-width:420px;">
+    <h3 style="margin-bottom:0.4rem;">Quel transport ?</h3>
+    <p style="margin-bottom:1.5rem;">Choisissez votre mode de transport pour démarrer votre réservation.</p>
+    <div class="transport-choices">
+      <a href="contrat-reservation.html?transport=avion" class="transport-choice">
+        <div class="tc-icon" style="background:linear-gradient(135deg,#0066FF,#003d99);">
+          <svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+        </div>
+        <div class="tc-text"><b>Avion</b><span>Vols domestiques</span></div>
+        <span class="tc-arrow">→</span>
+      </a>
+      <a href="contrat-reservation.html?transport=train" class="transport-choice">
+        <div class="tc-icon" style="background:linear-gradient(135deg,#1C3557,#0A1628);">
+          <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/></svg>
+        </div>
+        <div class="tc-text"><b>Train</b><span>Liaison Libreville — Franceville</span></div>
+        <span class="tc-arrow">→</span>
+      </a>
+      <a href="contrat-reservation.html?transport=bateau" class="transport-choice">
+        <div class="tc-icon" style="background:linear-gradient(135deg,#E8192C,#900010);">
+          <svg viewBox="0 0 24 24"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
+        </div>
+        <div class="tc-text"><b>Bateau</b><span>Liaison Libreville — Port-Gentil</span></div>
+        <span class="tc-arrow">→</span>
+      </a>
+    </div>
+    <button class="modal-close" onclick="closeTransport()" style="margin-top:1.2rem;">Annuler</button>
+  </div>
+</div>
+
+<script>
+function openTransport() {
+  document.getElementById('transport-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeTransport() {
+  document.getElementById('transport-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.getElementById('transport-modal').addEventListener('click', function(e){
+  if (e.target === this) closeTransport();
+});
+
+function openModal(service) {
+  var msg = 'Bonjour, je suis intéressé(e) par votre futur service : ' + service + '. Pouvez-vous me tenir informé(e) ?';
+  window.open('https://wa.me/241065033140?text=' + encodeURIComponent(msg), '_blank');
+}
+</script>
+
+</body>
+</html>
