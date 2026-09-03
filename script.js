@@ -375,7 +375,7 @@ async function validerContrat() {
   al.className = 'alert';
 
   // Récupération de la signature
-  signatureData = document.getElementById('sigCanvas').toDataURL('image/png');
+signatureData = document.getElementById('sigCanvas').toDataURL('image/jpeg', 0.5);
 
   // Affichage du numéro de contrat
   document.getElementById('confirm-num').textContent = contractNum;
@@ -1004,7 +1004,7 @@ function genererPDF() {
 
     doc.addImage(
       signatureData,
-      'PNG',
+      'JPEG',
       ml + 2,
       y + 1,
       76,
